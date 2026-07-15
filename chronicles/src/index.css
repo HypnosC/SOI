@@ -1,0 +1,6 @@
+/* 全局重置；主题色在 App.css */
+html,
+body {
+  margin: 0;
+  height: 100%;
+}

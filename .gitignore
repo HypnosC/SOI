@@ -1,0 +1,9 @@
+﻿node_modules/
+dist/
+dist-ssr/
+*.local
+.DS_Store
+**/src-tauri/target/
+chronicles/public/tiles/**
+!chronicles/public/tiles/meta.json
+!chronicles/public/tiles/README.md

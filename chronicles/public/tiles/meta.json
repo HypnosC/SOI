@@ -1,0 +1,4 @@
+{
+  "ready": false,
+  "comment": "把此文件改成 \"ready\": true，并在本目录按 {z}/{x}/{y}.png 放好瓦片后，应用会优先用本地底图。"
+}
