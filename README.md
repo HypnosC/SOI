@@ -1,10 +1,12 @@
 # SOI
-## I am a beacon of knowledge blazing out across a black sea of ignorance.
 
-Ignorance Chronicles and related personal projects.
+## I am a beacon of knowledge blazing out across a black sea of ignorance.
 
 ## Projects
 
-- [chronicles](./chronicles) — Chronicles of SOI: timeline + China map (time-space linked)
+- [chronicles](./chronicles) — **Chronicles of SOI**, a spacetime notebook for history.
 
-子项目：chronicles（无知编年 · 时空笔记）
+### Chronicles of SOI
+
+Pin events on a timeline and on a map—select one, and the other follows.  
+From dynasty to place on the map: remember *when* and *where* together.
