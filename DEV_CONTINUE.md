@@ -80,11 +80,14 @@ lua scripts/check_path.lua    # 或 lua5.4
 
 | 文件 | 作用 |
 |------|------|
-| `scripts/main.lua` | 打工人塔防可玩原型入口 |
+| `scripts/main.lua` | 打工人塔防可玩原型入口（旧办公室皮，可作技术参考） |
 | `scripts/DagongrenTD/path.lua` | 路径折线推进数学 |
 | `scripts/check_path.lua` | 路径逻辑自检 |
 | `project.json` | 子项目元数据 |
 | `.maker-mcp/config.json` | Maker 项目绑定（已入库） |
+| `design/towers_enemies_balance.md` | 塔/敌人数值骨架 |
+| `design/ui_screens.md` | 界面信息架构 |
+| `design/ui_wireframe.html` | **可浏览器打开的 UI 线框**（先看这个） |
 
 **原型玩法摘要（便于对思路，实现可推翻）：**
 
