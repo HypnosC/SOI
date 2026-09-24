@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>打工人一生 · UI 线框</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+SC:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #1c2229;
+      --panel: #2a323c;
+      --panel-2: #343e4a;
+      --line: #4a5562;
+      --text: #e8eef4;
+      --muted: #9aa7b5;
+      --life: #6fbf8a;
+      --money: #e2c56b;
+      --danger: #d pen67;
+      --accent: #5b8def;
+      --good: #3cb371;
+      --bad: #d95c5c;
+      --path: #6b7580;
+      --plot: #3a4450;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(ellipse at 20% 0%, #2a3340 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 100%, #243038 0%, transparent 45%),
+        #12161b;
+      font-family: "IBM Plex Sans SC", "IBM Plex Sans", sans-serif;
+      color: var(--text);
+      padding: 24px 12px;
+    }
+    .wrap { width: min(100%, 420px); }
+    h1 {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .phone {
+      position: relative;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0,0,0,.45);
+      aspect-ratio: 9 / 16;
+      display: flex;
+      flex-direction: column;
+    }
+    .top {
+      padding: 12px 14px 8px;
+      background: linear-gradient(180deg, #252c35, transparent);
+      border-bottom: 1px solid rgba(74,85,98,.5);
+    }
+    .top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+    }
+    .top-row strong { font-weight: 600; }
+    .muted { color: var(--muted); }
+    .life-bar {
+      margin-top: 8px;
+      height: 8px;
+      background: #11161c;
+      border-radius: 99px;
+      overflow: hidden;
+      border: 1px solid #3a4450;
+    }
+    .life-bar > i {
+      display: block;
+      height: 100%;
+      width: 62%;
+      background: linear-gradient(90deg, #4a9a66, var(--life));
+    }
+    .meta {
+      margin-top: 6px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .meta .money { color: var(--money); }
+
+    .stage {
+      flex: 1;
+      position: relative;
+      margin: 8px 10px;
+      border-radius: 12px;
+      background:
+        linear-gradient(180deg, rgba(40,48,58,.9), rgba(32,38,46,.95)),
+        repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(255,255,255,.03) 24px);
+      border: 1px solid var(--line);
+      overflow: hidden;
+    }
+    .stage-label {
+      position: absolute;
+      top: 8px;
+      left: 10px;
+      font-size: 11px;
+      color: var(--muted);
+      z-index: 2;
+    }
+    svg.map { width: 100%; height: 100%; display: block; }
+    .hint {
+      position: absolute;
+      left: 10px; right: 10px; bottom: 8px;
+      font-size: 10px;
+      color: var(--muted);
+      background: rgba(0,0,0,.35);
+      padding: 6px 8px;
+      border-radius: 8px;
+    }
+    .hint b.good { color: var(--good); }
+    .hint b.bad { color: var(--bad); }
+
+    .dock {
+      padding: 8px 10px 12px;
+      background: var(--panel);
+      border-top: 1px solid var(--line);
+    }
+    .slots {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .slot {
+      aspect-ratio: 1;
+      border-radius: 10px;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      display: grid;
+      place-items: center;
+      font-size: 10px;
+      text-align: center;
+      line-height: 1.2;
+      padding: 4px;
+      cursor: pointer;
+      color: var(--text);
+    }
+    .slot.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
+      background: #3a4a63;
+    }
+    .slot small { display: block; color: var(--muted); font-size: 9px; }
+    .detail {
+      min-height: 34px;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      padding: 0 2px;
+    }
+    .detail strong { color: var(--text); font-weight: 600; }
+    .actions {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr 0.8fr;
+      gap: 6px;
+    }
+    button {
+      font: inherit;
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 8px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .btn-go { background: var(--accent); color: #fff; }
+    .btn-dim { background: var(--panel-2); color: var(--text); border: 1px solid var(--line); }
+    .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+
+    /* Event overlay */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(8,10,14,.72);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 16px;
+      z-index: 5;
+    }
+    .overlay.show { display: flex; }
+    .card {
+      width: 100%;
+      background: #2e3641;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      animation: up .25s ease;
+    }
+    @keyframes up {
+      from { transform: translateY(12px); opacity: 0; }
+      to { transform: none; opacity: 1; }
+    }
+    .card h2 { font-size: 16px; margin-bottom: 4px; }
+    .card .sub { font-size: 12px; color: var(--muted); margin-bottom: 12px; line-height: 1.45; }
+    .opt {
+      display: block;
+      width: 100%;
+      text-align: left;
+      margin-bottom: 8px;
+      padding: 12px;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: var(--text);
+      font-weight: 500;
+    }
+    .opt span {
+      display: block;
+      margin-top: 4px;
+      font-size: 10px;
+      color: var(--muted);
+      font-weight: 400;
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+    .tabs button {
+      background: #1a2027;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      font-size: 11px;
+      padding: 8px 12px;
+      font-weight: 500;
+    }
+    .tabs button.on {
+      color: var(--text);
+      border-color: var(--accent);
+      background: #243044;
+    }
+    .note {
+      margin-top: 12px;
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.5;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>UI 线框 · 可点选预览（非游戏）</h1>
+    <div class="phone" id="phone">
+      <header class="top">
+        <div class="top-row">
+          <div><strong>陈一凡 · 28岁</strong> <span class="muted">立业</span></div>
+          <div class="muted">第 1 / 3 代</div>
+        </div>
+        <div class="life-bar" title="寿命期望"><i></i></div>
+        <div class="meta">
+          <span>本波：<strong style="color:var(--text)">月供年</strong></span>
+          <span class="money">钱 120</span>
+        </div>
+      </header>
+
+      <section class="stage" id="stage">
+        <div class="stage-label">战场 · 点击空格试放塔</div>
+        <svg class="map" viewBox="0 0 300 420" id="map">
+          <!-- path -->
+          <path d="M20 210 H80 V90 H150 V320 H220 V170 H280"
+                fill="none" stroke="#6b7580" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" opacity=".95"/>
+          <path d="M20 210 H80 V90 H150 V320 H220 V170 H280"
+                fill="none" stroke="#8b949e" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="20" cy="210" r="12" fill="#4a9a66"/>
+          <circle cx="280" cy="170" r="14" fill="#c45c5c"/>
+          <text x="8" y="190" fill="#9aa7b5" font-size="10">前台</text>
+          <text x="248" y="150" fill="#9aa7b5" font-size="10">家</text>
+          <!-- build plots -->
+          <g id="plots" fill="#3a4450" stroke="#5a6572" stroke-width="1.5"></g>
+          <g id="towers"></g>
+          <g id="links"></g>
+        </svg>
+        <div class="hint" id="hint">选底栏塔，再点灰色空位。邻接会显示 <b class="good">绿</b> / <b class="bad">红</b>。</div>
+      </section>
+
+      <footer class="dock">
+        <div class="slots" id="slots"></div>
+        <div class="detail" id="detail">点选一座塔查看说明</div>
+        <div class="actions">
+          <button class="btn-go" type="button" id="btnFight">开战</button>
+          <button class="btn-dim" type="button" id="btnEvent">事件</button>
+          <button class="btn-dim" type="button" id="btnTree">发展</button>
+          <button class="btn-ghost" type="button" id="btnClear">清</button>
+        </div>
+      </footer>
+
+      <div class="overlay" id="overlay">
+        <div class="card" id="card"></div>
+      </div>
+    </div>
+
+    <div class="tabs" id="tabs">
+      <button type="button" class="on" data-view="battle">A 战场</button>
+      <button type="button" data-view="event">B 事件</button>
+      <button type="button" data-view="tree">C 科技树</button>
+      <button type="button" data-view="dead">E 结算</button>
+    </div>
+    <p class="note">
+      打开本文件即可预览。正式美术/动效在开发机按
+      <code>ui_screens.md</code> 替换线框即可。
+    </p>
+  </div>
+
+  <script>
+    const TOWERS = [
+      { id: "career", name: "工位", cost: 70, dps: 18, like: "饭局", hate: "熬夜", color: "#2d5a78" },
+      { id: "cert", name: "证书", cost: 60, dps: 14, like: "减速敌", hate: "", color: "#3d5a80" },
+      { id: "network", name: "饭局", cost: 65, dps: 5, like: "工位", hate: "忍字", color: "#6a4a7a" },
+      { id: "saver", name: "储蓄", cost: 55, dps: 0, like: "手艺", hate: "冲动", color: "#4a6a50" },
+      { id: "sleep", name: "早睡", cost: 45, dps: 0, like: "输出", hate: "熬夜", color: "#3a5a5a" },
+    ];
+
+    const PLOTS = [
+      [70, 150], [70, 270], [120, 150], [120, 270],
+      [180, 70], [180, 220], [250, 220], [250, 110],
+    ];
+
+    const slotsEl = document.getElementById("slots");
+    const detailEl = document.getElementById("detail");
+    const plotsEl = document.getElementById("plots");
+    const towersEl = document.getElementById("towers");
+    const linksEl = document.getElementById("links");
+    const hintEl = document.getElementById("hint");
+    const overlay = document.getElementById("overlay");
+    const card = document.getElementById("card");
+
+    let selected = 0;
+    const built = new Map(); // plotIndex -> towerId
+
+    function renderSlots() {
+      slotsEl.innerHTML = TOWERS.map((t, i) => `
+        <button type="button" class="slot ${i === selected ? "active" : ""}" data-i="${i}">
+          ${t.name}<small>¥${t.cost}</small>
+        </button>
+      `).join("");
+      [...slotsEl.querySelectorAll(".slot")].forEach(btn => {
+        btn.onclick = () => {
+          selected = +btn.dataset.i;
+          renderSlots();
+          showDetail();
+        };
+      });
+      showDetail();
+    }
+
+    function showDetail() {
+      const t = TOWERS[selected];
+      detailEl.innerHTML = `<strong>${t.name}</strong> · 造价 ${t.cost}` +
+        (t.dps ? ` · DPS ${t.dps}` : " · 辅助") +
+        (t.like ? ` · 喜邻：${t.like}` : "") +
+        (t.hate ? ` · 忌：${t.hate}` : "");
+    }
+
+    function dist(a, b) {
+      const dx = a[0] - b[0], dy = a[1] - b[1];
+      return Math.hypot(dx, dy);
+    }
+
+    function renderPlots() {
+      plotsEl.innerHTML = PLOTS.map((p, i) =>
+        `<circle class="plot" data-i="${i}" cx="${p[0]}" cy="${p[1]}" r="16" style="cursor:pointer" />`
+      ).join("");
+      [...plotsEl.querySelectorAll(".plot")].forEach(c => {
+        c.addEventListener("click", () => place(+c.dataset.i));
+      });
+    }
+
+    function place(i) {
+      const t = TOWERS[selected];
+      built.set(i, t.id);
+      renderBuilt();
+      const neighbors = PLOTS.map((p, j) => ({ j, d: dist(PLOTS[i], p) }))
+        .filter(x => x.j !== i && x.d < 95 && built.has(x.j));
+      if (neighbors.length) {
+        hintEl.innerHTML = `已放置「${t.name}」。检测到 ${neighbors.length} 个邻接 → 预览 <b class="good">绿友好</b> / <b class="bad">红冲突</b>（正式版读表）。`;
+      } else {
+        hintEl.textContent = `已放置「${t.name}」。再在旁边放塔可看邻接反馈。`;
+      }
+    }
+
+    function renderBuilt() {
+      towersEl.innerHTML = "";
+      linksEl.innerHTML = "";
+      const entries = [...built.entries()];
+      for (const [i, id] of entries) {
+        const t = TOWERS.find(x => x.id === id);
+        const [x, y] = PLOTS[i];
+        towersEl.innerHTML += `
+          <circle cx="${x}" cy="${y}" r="14" fill="${t.color}" stroke="#dfe7f0" stroke-width="1.5"/>
+          <text x="${x}" y="${y + 3}" text-anchor="middle" fill="#fff" font-size="8">${t.name.slice(0,2)}</text>
+        `;
+      }
+      // adjacency preview lines
+      for (let a = 0; a < entries.length; a++) {
+        for (let b = a + 1; b < entries.length; b++) {
+          const [ia, ida] = entries[a];
+          const [ib, idb] = entries[b];
+          if (dist(PLOTS[ia], PLOTS[ib]) >= 95) continue;
+          const ta = TOWERS.find(x => x.id === ida);
+          const tb = TOWERS.find(x => x.id === idb);
+          const good =
+            (ta.like && tb.name.includes(ta.like.slice(0, 2))) ||
+            (tb.like && ta.name.includes(tb.like.slice(0, 2))) ||
+            (ta.id === "career" && tb.id === "network") ||
+            (ta.id === "network" && tb.id === "career") ||
+            (ta.id === "sleep" && tb.dps > 0) ||
+            (tb.id === "sleep" && ta.dps > 0);
+          const bad =
+            (ta.hate && tb.name.includes(ta.hate.slice(0, 2))) ||
+            (tb.hate && ta.name.includes(tb.hate.slice(0, 2)));
+          const color = bad ? "#d95c5c" : good ? "#3cb371" : "#8899aa";
+          const [x1, y1] = PLOTS[ia];
+          const [x2, y2] = PLOTS[ib];
+          linksEl.innerHTML += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="2" stroke-dasharray="4 3" opacity=".85"/>`;
+        }
+      }
+    }
+
+    function showOverlay(html) {
+      card.innerHTML = html;
+      overlay.classList.add("show");
+    }
+    function hideOverlay() { overlay.classList.remove("show"); }
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) hideOverlay(); });
+
+    document.getElementById("btnEvent").onclick = () => showEvent();
+    document.getElementById("btnTree").onclick = () => showTree();
+    document.getElementById("btnFight").onclick = () => {
+      hintEl.textContent = "线框演示：正式版这里开始刷怪。布局已锁定（MVP）。";
+    };
+    document.getElementById("btnClear").onclick = () => {
+      built.clear();
+      renderBuilt();
+      hintEl.textContent = "已清空。选塔再点空位。";
+    };
+
+    function showEvent() {
+      showOverlay(`
+        <h2>大节点 · 住的问题</h2>
+        <p class="sub">28岁。房租又涨了。同事在晒首付。</p>
+        <button type="button" class="opt" data-close>咬牙上车<span>解锁「月供兽」敌潮 · 钱↓ · 发展树「资产」可点</span></button>
+        <button type="button" class="opt" data-close>继续租<span>压力+ · 保留流动性 · 本波偏平</span></button>
+        <button type="button" class="opt" data-close>回老家<span>改地图模版 · 部分上进塔削弱</span></button>
+      `);
+      card.querySelectorAll("[data-close]").forEach(b => b.onclick = hideOverlay);
+    }
+
+    function showTree() {
+      showOverlay(`
+        <h2>发展树（线框）</h2>
+        <p class="sub">三列：求稳 / 上进 / 欲望。战前可点 0～1 次。</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:11px;text-align:center">
+          <div style="background:#24302a;padding:10px;border-radius:10px;border:1px solid #3d5a45">早睡盾<br/><span style="color:#8f8">已点</span></div>
+          <div style="background:#243044;padding:10px;border-radius:10px;border:1px solid #3d5a80">证书炮<br/><span style="color:#8af">可点</span></div>
+          <div style="background:#302430;padding:10px;border-radius:10px;border:1px solid #5a3d4a">熬夜灯<br/><span style="color:#a88">锁</span></div>
+        </div>
+        <button type="button" class="opt" style="margin-top:12px" data-close>关闭</button>
+      `);
+      card.querySelector("[data-close]").onclick = hideOverlay;
+    }
+
+    function showDead() {
+      showOverlay(`
+        <h2>一代结束 · 61岁</h2>
+        <p class="sub">死因：中年责任峰后的身体透支。通关。</p>
+        <p class="sub">遗产：工位机枪 L2 烙印 · 钱 40% · 关键词「还贷成功」</p>
+        <button type="button" class="opt" data-close>归档通关</button>
+        <button type="button" class="opt" data-close>让孩子接着（第2代）</button>
+      `);
+      card.querySelectorAll("[data-close]").forEach(b => b.onclick = hideOverlay);
+    }
+
+    document.querySelectorAll("#tabs button").forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll("#tabs button").forEach(b => b.classList.remove("on"));
+        btn.classList.add("on");
+        const v = btn.dataset.view;
+        if (v === "battle") hideOverlay();
+        if (v === "event") showEvent();
+        if (v === "tree") showTree();
+        if (v === "dead") showDead();
+      };
+    });
+
+    renderSlots();
+    renderPlots();
+  </script>
+</body>
+</html>
