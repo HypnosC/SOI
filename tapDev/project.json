@@ -1,0 +1,7 @@
+{
+  "name": "打工人塔防",
+  "slug": "dagongren-td",
+  "entry": "scripts/main.lua",
+  "maker_app_id": "2f7e12ed-4b6e-4ba4-a650-5c89e1481784",
+  "genre": "tower-defense"
+}
