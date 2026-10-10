@@ -342,7 +342,8 @@ header{gap:10px}
 header .stat{flex:0 0 auto}
 /* ===== 当前事件卡：按需出现（点时间轴 / 点事件点显示，点空白隐藏） ===== */
 #now{transition:opacity .22s ease, transform .22s ease}
-#now.off{opacity:0;pointer-events:none;transform:translateY(10px)}
+#now.off{opacity:0;pointer-events:none;transform:translateY(10px);visibility:hidden}
+#now.off{transition:none}   /* visibility 是离散属性：收起立刻生效，不依赖 transition */
 #nowx{position:absolute;right:10px;top:9px;width:26px;height:26px;cursor:pointer;
   border:1px solid var(--line);background:rgba(8,14,20,.82);color:#7fa6c8;
   font-size:13px;line-height:1;padding:0;transition:.15s}
