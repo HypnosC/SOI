@@ -480,6 +480,35 @@ addEventListener('keydown',e=>{
 addEventListener('resize',()=>{ resize(); drawTL(); });
 new ResizeObserver(()=>{ resize(); drawTL(); }).observe(cv);
 
+// ============================================================
+//  触摸：双指捏合缩放地图（桌面端用滚轮，手机端用捏合）
+// ============================================================
+(function(){
+  let pin=null;
+  const dist=t=>Math.hypot(t[0].clientX-t[1].clientX, t[0].clientY-t[1].clientY);
+  const mid =t=>({x:(t[0].clientX+t[1].clientX)/2, y:(t[0].clientY+t[1].clientY)/2});
+  cv.addEventListener('touchstart',e=>{
+    if(e.touches.length!==2) return;
+    e.preventDefault();
+    const m=mid(e.touches), r=cv.getBoundingClientRect();
+    pin={ d:dist(e.touches), k:cam.k, mx:m.x-r.left, my:m.y-r.top };
+    pin.wl = cam.lng + (pin.mx - W/2)/(PPD()*cam.k);   // 手指中心对应的经纬度
+    pin.wa = cam.lat - (pin.my - H/2)/(PPD()*cam.k);
+  },{passive:false});
+  cv.addEventListener('touchmove',e=>{
+    if(!pin || e.touches.length!==2) return;
+    e.preventDefault();
+    const k = Math.max(0.55, Math.min(7, pin.k * dist(e.touches)/pin.d));
+    camT.k   = k;                                       // 以手指中心为锚点重新定位
+    camT.lng = pin.wl - (pin.mx - W/2)/(PPD()*k);
+    camT.lat = pin.wa + (pin.my - H/2)/(PPD()*k);
+    cam.lng=camT.lng; cam.lat=camT.lat; cam.k=camT.k;   // 捏合时不做缓动，跟手
+  },{passive:false});
+  const end=()=>{ pin=null; };
+  cv.addEventListener('touchend',end);
+  cv.addEventListener('touchcancel',end);
+})();
+
 // 图例
 (function(){
   const el=document.getElementById('legend');
@@ -499,7 +528,7 @@ setTimeout(()=>{
   document.title='DIAG:: '+[
     R(app), R(document.querySelector('header')), R(document.querySelector('main')),
     R(document.querySelector('footer')), R(document.getElementById('tlcv')), R(document.getElementById('cv'))
-  ].join(' | ')+' || appScroll '+app.scrollHeight+' bodyScroll '+document.body.scrollHeight
+  ].join(' | ')+' || appScroll '+app.scrollHeight+' bodyScroll '+document.body.scrollHeight+' innerH '+window.innerHeight+' appStyle '+getComputedStyle(document.getElementById('app')).height+' footStyle '+getComputedStyle(document.querySelector('footer')).height;
    +' innerH '+window.innerHeight+' || appStyle '+getComputedStyle(app).height+' footStyle '
    +getComputedStyle(document.querySelector('footer')).height;
 }, 900);

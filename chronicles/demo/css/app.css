@@ -32,7 +32,7 @@
 
   /* ---------- 主体 ---------- */
   main{flex:1 1 auto;position:relative;min-height:0}
-  #cv{display:block;width:100%;height:100%;cursor:grab}
+  #cv{display:block;width:100%;height:100%;cursor:grab;touch-action:none}
   #cv.dragging{cursor:grabbing}
 
   /* 当前事件卡（左下） */
@@ -350,3 +350,78 @@ header .stat{flex:0 0 auto}
 /* ✕ 不压到长标题 */
 #now h2{padding-right:34px}
 #now .date, #now .loc{padding-right:34px}
+
+@media(max-width:860px){
+  /* ---- header：折成两行，隐藏次要控件 ---- */
+  header{flex-wrap:wrap; gap:8px; padding:8px 12px}
+  .brand .logo{width:28px; height:28px}
+  .brand .bt b{font-size:14px; letter-spacing:.08em}
+  .brand .bt span{font-size:8.5px; letter-spacing:.14em}
+  .demo-tag, .speeds, #reset, #all, #imp, #exp{display:none}
+  header .stat{font-size:11px}
+  .playbtn{width:36px; height:36px}
+  .btn{padding:7px 11px; font-size:12.5px; min-height:36px}
+  .seg button{padding:7px 10px; font-size:12.5px}
+
+  /* ---- 图例：默认收起，点右上角切换 ---- */
+  #legend{
+    left:8px; top:56px; transform:none; display:none;
+    font-size:10.5px; padding:9px 11px; gap:5px; max-height:52vh; overflow:auto;
+  }
+  #legend.on{display:flex}
+  #spacebar{font-size:10px; padding:6px 9px; left:8px; top:8px; max-width:60vw}
+
+  /* ---- 当前事件卡：全宽贴底 ---- */
+  #now{left:8px; right:8px; width:auto; bottom:8px; padding:13px 14px}
+  #now h2{font-size:16px; padding-right:32px}
+  #now .desc{font-size:12px}
+
+  /* ---- 隧道：全屏覆盖 ---- */
+  #tunnel{width:100vw; max-width:100vw; border-left:0}
+  #tncol{padding:8px 12px 10px; gap:6px}
+  #tnbar{padding:12px 14px 9px}
+  #tnbar span{display:none}
+  #tnmapwrap{height:168px}
+
+  /* ---- 叙事模式：浮动卡变窄 ---- */
+  .fxf{width:78vw; max-width:268px}
+  .fxf.cur{width:86vw; max-width:322px}
+  #fxhud .hd-l{left:16px; top:16px; max-width:78vw}
+  #fxhud .hd-l b{font-size:22px}
+  #fxhud .hd-r{left:16px; top:auto; bottom:96px}
+  #fxhud .hd-r .v{font-size:26px}
+  #fxhud .hd-b{left:16px; bottom:60px; font-size:9.5px}
+  #fxx{right:12px; top:12px}
+  #fxctl{bottom:12px; padding:7px 11px; gap:6px}
+  #fxctl .hint{display:none}
+  #fxctl button{width:34px; height:34px}
+
+  /* ---- 底部时间轴：加高，手指好点 ---- */
+  footer{height:132px}
+  #tlcv{touch-action:none}
+
+  /* ---- 弹窗全宽 ---- */
+  #pickbox, #addbox{width:94vw; max-height:86vh}
+  .pickrow{padding:13px 14px}
+}
+
+@media(max-width:520px){
+  .brand .bt span{display:none}
+  .demo-tag{display:none}
+  header{gap:6px}
+  .btn{padding:6px 9px; font-size:12px}
+}
+/* ---- 手机端图例：顶部一条可横向滑动的胶囊（不需要按钮） ---- */
+@media(max-width:860px){
+  #legend{
+    left:0; right:0; top:46px; transform:none; display:flex;
+    flex-direction:row; flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden;
+    gap:14px; padding:8px 12px; font-size:11px; max-height:none;
+    background:linear-gradient(180deg, rgba(6,14,26,.94), rgba(6,14,26,.55));
+    border:0; border-radius:0; backdrop-filter:blur(6px);
+    -webkit-overflow-scrolling:touch; scrollbar-width:none;
+  }
+  #legend::-webkit-scrollbar{display:none}
+  #legend .row{flex:0 0 auto; white-space:nowrap; gap:6px}
+  #legend i{width:9px; height:9px}
+}
