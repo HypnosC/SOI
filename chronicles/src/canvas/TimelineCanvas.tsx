@@ -1,7 +1,6 @@
-import { useCallback, useLayoutEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import { drawEmptyStateHint, paintTimeline2d } from '@/canvas/drawTimeline2d';
-import { pickAtWorld } from '@/domain/layoutEvents';
-import { placeEventCards } from '@/domain/layoutEvents';
+import { pickAtWorld, placeEventCards } from '@/domain/layoutEvents';
 import { screenToWorld, yearFromScreenX, type TimelineViewport } from '@/domain/timelineMath';
 import { getEventNodes } from '@/domain/timelineDocHelpers';
 import type { TimelineDoc } from '@/domain/timelineTypes';
@@ -32,6 +31,13 @@ export function TimelineCanvas({
   const pan = useRef({ active: false, px: 0, py: 0, pickedNode: false });
 
   const events = getEventNodes(doc);
+
+  /**
+   * 卡片排布是全组件唯一的面布局来源：绘制、命中测试、双击判定共用这一份。
+   * 原实现分别在 paint / pointerDown / dblclick 里各调一次 placeEventCards，
+   * 每次交互算 3 遍（含一次同年分组排序）。事件上千时会明显掉帧。
+   */
+  const cards = useMemo(() => placeEventCards(events), [events]);
 
   useLayoutEffect(() => {
     const el = wrapRef.current;
@@ -68,11 +74,11 @@ export function TimelineCanvas({
       cssH: size.h,
       dpr,
       vp: viewport,
-      events,
+      cards,
       selectedId,
     });
     drawEmptyStateHint(ctx, size.w, size.h, dpr, events.length > 0);
-  }, [events, selectedId, size.h, size.w, syncCanvasBitmap, viewport]);
+  }, [cards, events.length, selectedId, size.h, size.w, syncCanvasBitmap, viewport]);
 
   useLayoutEffect(() => {
     paint();
@@ -104,7 +110,6 @@ export function TimelineCanvas({
     if (e.button !== 0) return;
     const { sx, sy } = clientToLocal(e.clientX, e.clientY);
     const w = screenToWorld(sx, sy, viewport);
-    const cards = placeEventCards(events);
     const pick = pickAtWorld(w.x, w.y, cards);
     if (pick?.kind === 'node') {
       pan.current = { active: false, px: e.clientX, py: e.clientY, pickedNode: true };
@@ -141,7 +146,6 @@ export function TimelineCanvas({
   const onDoubleClick = (e: React.MouseEvent) => {
     const { sx, sy } = clientToLocal(e.clientX, e.clientY);
     const w = screenToWorld(sx, sy, viewport);
-    const cards = placeEventCards(events);
     if (pickAtWorld(w.x, w.y, cards)) return;
     onCreateAtYear(yearFromScreenX(sx, viewport));
   };

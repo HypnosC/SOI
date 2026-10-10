@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>无知编年 · CHRONICLES — SOI</title>
+<meta name="description" content="无知编年 CHRONICLES · SOI 无知之海 —— 时空笔记本。把历史写成你自己的结构。">
+<link rel="icon" type="image/png" href="assets/soi-mark-64.png">
+  <link rel="stylesheet" href="css/app.css">
+  <script>window.onerror=function(m,u,l){if(location.search.indexOf("diag")>=0)document.title="ERR:: "+m+" @ "+String(u).split("/").pop()+":"+l;console.error(m,u,l);return false;};window.addEventListener("error",function(e){if(e.target&&e.target.tagName==="SCRIPT")document.title="LOADERR:: "+e.target.src;},true);</script>
+
+</head>
+
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand">
+      <img class="logo" src="assets/soi-mark-128.png" alt="SOI">
+      <div class="bt"><b>无知编年</b><span>CHRONICLES · SOI</span></div>
+    </div>
+    <span class="demo-tag">演示数据 · 2016–2025</span>
+    <button class="playbtn" id="play" title="播放 / 暂停（空格）">▶</button>
+    <div class="speeds" id="speeds">
+      <button data-s="1" class="on">1×</button>
+      <button data-s="2">2×</button>
+      <button data-s="4">4×</button>
+      <button data-s="8">8×</button>
+    </div>
+    <button class="btn" id="reset">回到开头</button>
+    <button class="btn" id="all">全部显示</button>
+    <button class="btn" id="imp">导入 JSON</button>
+    <button class="btn" id="exp">导出 JSON</button>
+    <button class="btn" id="stories" style="border-color:rgba(255,214,107,.45);color:#ffd66b">✦ 叙事</button>
+    <button class="btn" id="addbtn">＋ 添加</button>
+    <div class="seg" id="layers" style="border-left:1px solid var(--line);margin-left:4px">
+      <button data-l="world">世界</button>
+      <button data-l="mine">我</button>
+      <button data-l="all" class="on">全部</button>
+    </div>
+    <span class="spacer"></span>
+    <div class="stat">已发生 <b id="nDone">0</b> / <span id="nAll">0</span>　·　<span id="curDate">2016.01</span></div>
+  </header>
+
+  <main>
+    <canvas id="cv"></canvas>
+    <div id="spacebar">天外　<b id="spaceList">—</b></div>
+    <div id="legend"></div>
+    <div id="yearmark">2016</div>
+    <div id="now">
+      <button id="nowx" title="隐藏">✕</button>
+      <div class="tag" id="nowTag"><i></i><span></span></div>
+      <div class="date" id="nowDate">—</div>
+      <h2 id="nowTitle">按播放开始</h2>
+      <div class="loc" id="nowLoc"></div>
+      <div class="media-wrap" id="nowMedia" style="display:none"></div>
+      <div class="desc" id="nowDesc">这是用「近十年世界大事」做的一批演示数据。<br>真正的产品叫 <b style="color:#d8b878">无知编年 CHRONICLES</b> —— SOI 无知之海的时空笔记本。<br><span style="color:#5b7c9c">无知之海 · 探索不止</span></div>
+      <button class="storybtn" id="nowStory"></button>
+    </div>
+    <div id="detail">
+      <button class="close" id="dclose">✕</button>
+      <div class="cat" id="dcat"><i></i><span></span></div>
+      <h2 id="dtitle"></h2>
+      <div class="dline" id="dline"></div>
+      <div class="body" id="dbody"></div>
+      <div class="kv" id="dkv"></div>
+      <button id="dsbtn"></button>
+    </div>
+  </main>
+
+  <!-- 叙事选择 -->
+  <div id="pick"><div id="pickbox">
+    <h2>展开一个故事</h2>
+    <div class="hint">主时间线上的每一个点，都可以展开成它自己的子时间线。<br>
+      下面这些事件带有故事节点 —— 点进去就是科幻电影式的展开。</div>
+    <div id="picklist"></div>
+  </div></div>
+  <!-- 焦点叙事模式：地图左 + 卡片右 -->
+  <div id="focus">
+    <canvas id="fxc"></canvas>
+    <div id="fxhud">
+      <span class="cnr a"></span><span class="cnr b"></span><span class="cnr c"></span><span class="cnr d"></span>
+      <div class="hd-l"><b id="fxtitle"></b><span id="fxsub"></span></div>
+      <div class="hd-r"><div class="k">NODE</div>
+        <div class="v"><span id="fxidx">01</span><i> / <span id="fxn">00</span></i></div></div>
+      <div class="hd-b" id="fxmeta"></div>
+    </div>
+    <div id="compare"></div>
+    <div id="fxcards"></div>
+    <button id="fxx">✕</button>
+    <div id="fxctl">
+      <button id="fxprev">‹</button><button id="fxplay">❚❚</button><button id="fxnext">›</button>
+      <span class="hint">地图可拖可缩</span>
+      <div class="dots" id="fxdots"></div>
+    </div>
+  </div>
+  <!-- 事件隧道：右侧纵向面板 -->
+  <div id="tunnel">
+    <div id="tnbar">
+      <b>EVENT TUNNEL</b>
+      <span id="tnsub"></span>
+      <button id="tnx">✕</button>
+    </div>
+    <div id="tnmapwrap"><canvas id="tnc"></canvas></div>
+    <div id="tncol">
+      <canvas id="tnspine"></canvas>
+      <div class="tnglbl" id="tnlblU">▲ BEFORE</div>
+      <div id="tnup"></div>
+      <div id="tncenter"></div>
+      <div id="tndown"></div>
+      <div class="tnglbl dn" id="tnlblD">AFTER ▼</div>
+    </div>
+    <div id="tnfoot">向上 ＝ 因（更早）　·　向下 ＝ 果（更晚）　·　左侧地图可继续拖动</div>
+  </div>
+  <!-- 添加单个事件 -->
+  <div id="addf"><div class="pnl" id="addbox"><div class="pnl-in">
+    <h2>添加一个事件</h2>
+    <div class="hint">单条用这个表单直接加。批量请用顶栏「导入 JSON」。</div>
+    <div class="frow"><div class="fld"><label>标题 *</label>
+      <input id="ai_t" placeholder="例如：中途岛海战" autocomplete="off"></div></div>
+    <div class="frow">
+      <div class="fld"><label>日期 *</label><input id="ai_d" placeholder="1942-06-04" autocomplete="off"></div>
+      <div class="fld"><label>地点</label><input id="ai_p" placeholder="中途岛" autocomplete="off"></div>
+      <div class="fld" style="flex:0 0 130px"><label>分类</label><select id="ai_c"></select></div>
+    </div>
+    <div class="frow">
+      <div class="fld"><label>经度</label><input id="ai_lng" placeholder="-177.37" autocomplete="off"></div>
+      <div class="fld"><label>纬度</label><input id="ai_lat" placeholder="28.20" autocomplete="off"></div>
+      <div class="fld" style="flex:0 0 168px"><label>是否在地球上</label>
+        <select id="ai_space"><option value="">在地球上</option><option value="1">天外（不落地图）</option></select></div>
+    </div>
+    <div class="frow"><div class="fld"><label>一句话说明</label>
+      <textarea id="ai_x" placeholder="一句话说清这是什么、为什么重要"></textarea></div></div>
+    <div class="frow"><div class="fld"><label>图片 / 视频（可选）</label>
+      <div class="filedrop" id="aidrop">
+        <img class="pv" id="aipv" alt="">
+        <div class="tx2"><b id="aitx">点击选择文件</b>支持常见图片与视频格式<br>
+          本地文件只在本次会话有效；要长期保存请用 JSON 导入外链或 base64</div>
+      </div>
+      <input type="file" id="ai_media" accept="image/*,video/*" style="display:none">
+    </div></div>    <div class="frow"><div class="fld"><label>纳入叙事（可选）</label>
+      <select id="ai_story"></select></div></div>
+    <div id="addmsg"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
+      <button class="btn-hard" id="adcancel">取消</button>
+      <button class="btn-hard go" id="adok">添加事件</button>
+    </div>
+  </div></div></div>
+  <footer>
+    <canvas id="tlcv"></canvas>
+    <div id="tip"></div>
+  </footer>
+</div>
+
+<script src="world.js"></script>
+<script src="events.js"></script>
+<script src="js/core.js"></script>
+<script src="js/focus.js"></script>
+<script src="js/tunnel.js"></script>
+<script src="js/add.js"></script>
+<script src="js/boot.js"></script>
+</body>
+</html>

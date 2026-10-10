@@ -1,10 +1,8 @@
 import {
   AXIS_WORLD_Y,
-  placeEventCards,
   type PlacedEventCard,
 } from '@/domain/layoutEvents';
 import { formatYearLabel, PX_PER_YEAR, screenToWorld, tickStep, type TimelineViewport } from '@/domain/timelineMath';
-import type { TimelineEventNode } from '@/domain/timelineTypes';
 
 export type PaintTimelineOptions = {
   ctx: CanvasRenderingContext2D;
@@ -12,7 +10,12 @@ export type PaintTimelineOptions = {
   cssH: number;
   dpr: number;
   vp: TimelineViewport;
-  events: TimelineEventNode[];
+  /**
+   * 已排布好的卡片。由调用方 useMemo 算一次后传入。
+   * 原实现在这里自己调 placeEventCards(events)，导致同一次交互里
+   * 绘制、命中测试、双击判定各算一遍（O(n log n) × 3）。
+   */
+  cards: PlacedEventCard[];
   selectedId: string | null;
 };
 
@@ -111,7 +114,7 @@ function computeVisibleTicks(cssW: number, vp: TimelineViewport): number[] {
 }
 
 export function paintTimeline2d(opts: PaintTimelineOptions) {
-  const { ctx, cssW, cssH, dpr, vp, events, selectedId } = opts;
+  const { ctx, cssW, cssH, dpr, vp, cards, selectedId } = opts;
 
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, cssW * dpr, cssH * dpr);
@@ -128,7 +131,6 @@ export function paintTimeline2d(opts: PaintTimelineOptions) {
   drawGridAndAxis(ctx, cssW, cssH, vp, tickYears);
   drawTickLabels(ctx, tickYears);
 
-  const cards = placeEventCards(events);
   for (const c of cards) {
     drawEventCard(ctx, c, c.id === selectedId, vp);
   }

@@ -22,26 +22,15 @@ local PATH_NORM = {
     { 0.48, 0.78 }, { 0.72, 0.78 }, { 0.72, 0.38 }, { 0.98, 0.38 },
 }
 
-local TOWER_DEFS = {
-    coffee = {
-        id = "coffee", name = "咖啡机", cost = 50, range = 1.1, damage = 12, range = 110,
-        color = { 92, 64, 51, 255 }, desc = "单点，续命起步",
-    },
-    senior = {
-        id = "senior", name = "老鸟", cost = 90, range = 0.55, damage = 18, range = 130,
-        color = { 45, 90, 120, 255 }, desc = "射速高，专治催更",
-    },
-    blame = {
-        id = "blame", name = "甩锅侠", cost = 140, range = 1.4, damage = 22, range = 100,
-        splash = 55, color = { 160, 70, 50, 255 }, desc = "溅射，会议团战法宝",
-    },
-}
+-- 数值定义已抽到 DagongrenTD.defs（纯数据、不依赖引擎，可脱引擎单测）。
+-- 上次的崩溃就是「表内 range 写了两遍 + 缺 fire」，现在有 check_defs.lua 兜住。
+local Defs = require("DagongrenTD.defs")
 
-local ENEMY_DEFS = {
-    { id = "ticket", name = "需求单", hp = 40, speed = 55, reward = 12, color = { 220, 200, 80, 255 } },
-    { id = "meeting", name = "紧急会议", hp = 28, speed = 95, reward = 16, color = { 230, 120, 90, 255 } },
-    { id = "pie", name = "画饼", hp = 110, speed = 38, reward = 28, color = { 180, 140, 220, 255 } },
-}
+local TOWER_DEFS = Defs.TOWER_DEFS
+
+-- 保持原型里「按下标取敌人」的写法不变
+local ENEMY_DEFS = {}
+for i, k in ipairs(Defs.ENEMY_ORDER) do ENEMY_DEFS[i] = Defs.ENEMY_DEFS[k] end
 
 local money, lives, wave, selectedTower
 local path = {}
@@ -516,7 +505,7 @@ end
 
 function CreateUI()
     local towerButtons = {}
-    for _, key in ipairs({ "coffee", "senior", "blame" }) do
+    for _, key in ipairs(Defs.TOWER_ORDER) do
         local def = TOWER_DEFS[key]
         towerButtons[#towerButtons + 1] = UI.Button {
             id = "pick_" .. key,

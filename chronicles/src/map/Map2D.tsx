@@ -102,11 +102,22 @@ export function Map2D({ events, selectedId, onSelect }: Props) {
     }
   }, [events, selectedId, onSelect]);
 
+  /**
+   * 只在「选中项发生变化」时飞图。
+   * 原实现依赖 [selectedId, events]，于是编辑已选事件的备注/标题也会触发一次镜头移动，
+   * 拖拽地图的过程中切一下选中就会被打断。
+   */
+  const lastFlewRef = useRef<string | null>(null);
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !selectedId) return;
+    if (!map || !selectedId) {
+      lastFlewRef.current = null;
+      return;
+    }
+    if (lastFlewRef.current === selectedId) return;
     const ev = events.find((e) => e.id === selectedId);
     if (!ev || !hasGeo(ev)) return;
+    lastFlewRef.current = selectedId;
     map.flyTo({ center: [ev.lng, ev.lat], zoom: Math.max(map.getZoom(), 6.5), essential: true });
   }, [selectedId, events]);
 
