@@ -99,14 +99,23 @@ document.querySelectorAll('#layers button').forEach(b=>b.onclick=()=>setLayer(b.
   if(q.has('layer')) setTimeout(()=>setLayer(q.get('layer')), 60);
   if(q.has('add')) setTimeout(openAdd, 150);
   if(q.has('tunnel')){ const te=EV.find(x=>x.t.indexOf(q.get('tunnel'))>=0); if(te) setTimeout(()=>openTunnel(te),150); }
-  const done=doneList(); if(done.length){ const l=done[done.length-1]; if(!current){current=l; showNow(l);} }
+  const done=doneList(); if(done.length){ const l=done[done.length-1]; if(!current){current=l; if(!window.matchMedia('(max-width:860px)').matches) showNow(l);} }
 })();
 
 // ============================================================
 //  手机端：一进来不要把事件卡铺在屏幕上（会遮住地图，没法操作）
 //  点时间轴 / 点事件点时 showNow() 会自动把它显示出来
 // ============================================================
-if(window.innerWidth<=860){
-  const _n=document.getElementById('now');
-  if(_n) _n.classList.add('off');
-}
+// 手机端：初始不显示事件卡（否则一进来就挡住地图三分之一，没法操作）
+//   点时间轴 / 点事件点时 showNow() 会去掉 .off，用户交互过就不再自动收起
+(function(){
+  const n=document.getElementById('now'); if(!n) return;
+  const mq=window.matchMedia('(max-width:860px)');
+  let touched=false;
+  new MutationObserver(()=>{ if(!n.classList.contains('off')) touched=true; })
+    .observe(n,{attributes:true,attributeFilter:['class']});
+  const hide=()=>{ if(mq.matches && !touched) n.classList.add('off'); };
+  hide();
+  setTimeout(hide,400);    // boot 时视口宽度可能还没稳定，再补一次
+  mq.addEventListener('change',e=>{ if(e.matches) hide(); });
+})();
