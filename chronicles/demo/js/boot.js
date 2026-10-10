@@ -101,3 +101,12 @@ document.querySelectorAll('#layers button').forEach(b=>b.onclick=()=>setLayer(b.
   if(q.has('tunnel')){ const te=EV.find(x=>x.t.indexOf(q.get('tunnel'))>=0); if(te) setTimeout(()=>openTunnel(te),150); }
   const done=doneList(); if(done.length){ const l=done[done.length-1]; if(!current){current=l; showNow(l);} }
 })();
+
+// ============================================================
+//  手机端：一进来不要把事件卡铺在屏幕上（会遮住地图，没法操作）
+//  点时间轴 / 点事件点时 showNow() 会自动把它显示出来
+// ============================================================
+if(window.innerWidth<=860){
+  const _n=document.getElementById('now');
+  if(_n) _n.classList.add('off');
+}

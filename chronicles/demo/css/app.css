@@ -372,9 +372,11 @@ header .stat{flex:0 0 auto}
   #spacebar{font-size:10px; padding:6px 9px; left:8px; top:8px; max-width:60vw}
 
   /* ---- 当前事件卡：全宽贴底 ---- */
-  #now{left:8px; right:8px; width:auto; bottom:8px; padding:13px 14px}
+  #now{left:8px; right:8px; width:auto; bottom:8px; padding:12px 13px; max-height:44vh; overflow-y:auto; -webkit-overflow-scrolling:touch}
   #now h2{font-size:16px; padding-right:32px}
-  #now .desc{font-size:12px}
+  #now .desc{font-size:12px; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden}
+  #nowMedia .media-wrap, #now .media{margin-top:8px; max-height:110px; overflow:hidden}
+  #nowStory{margin-top:8px; padding:9px 11px}
 
   /* ---- 隧道：全屏覆盖 ---- */
   #tunnel{width:100vw; max-width:100vw; border-left:0}
