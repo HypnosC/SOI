@@ -52,4 +52,10 @@ SOI                  母品牌 · 无知之海（本仓库）
 
 ---
 
+## 更新日志
+
+见 [`CHANGELOG.md`](CHANGELOG.md)。
+
+---
+
 <div align="center"><sub>春日号 &nbsp;·&nbsp; 无知编年 CHRONICLES &nbsp;·&nbsp; 深海回声 ECHOES</sub></div>

@@ -169,4 +169,10 @@ chronicles/
 
 ---
 
-<div align="center"><sub>春日号 · 无知编年 CHRONICLES · 深海回声 ECHOES</sub></div>
+<div align="center">
+
+[更新日志](../CHANGELOG.md) &nbsp;·&nbsp; [SOI 母项目](../README.md)
+
+<sub>春日号 · 无知编年 CHRONICLES · 深海回声 ECHOES</sub>
+
+</div>
