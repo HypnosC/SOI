@@ -27,3 +27,6 @@ public/tiles/**
 *.njsproj
 *.sln
 *.sw?
+
+# 历史疆域数据（18.7MB，来自 aourednik/historical-basemaps，不进 git）
+data/

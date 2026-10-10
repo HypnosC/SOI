@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chronicles of SOI · 时空结构原型 v2</title>
+<style>
+  :root{
+    --bg:#0b0c0f; --panel:#14161c; --line:#242832; --fg:#e8eaf0; --sub:#8b93a7;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);
+    font:13px/1.5 "Segoe UI",PingFang SC,"Microsoft YaHei",sans-serif;overflow:hidden}
+  #app{display:flex;flex-direction:column;height:100%}
+  header{display:flex;align-items:center;gap:14px;padding:9px 16px;
+    border-bottom:1px solid var(--line);background:var(--panel);flex:0 0 auto}
+  h1{font-size:14px;margin:0;font-weight:600}
+  .sub{color:var(--sub);font-size:11.5px}
+  .spacer{flex:1}
+  .legend{display:flex;gap:12px;font-size:11.5px;color:var(--sub);align-items:center}
+  .legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+  .pill{border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--sub);font-size:11.5px}
+  canvas{display:block;flex:1 1 auto;cursor:grab}
+  canvas.dragging{cursor:grabbing}
+  footer{display:flex;align-items:center;gap:16px;padding:7px 16px;
+    border-top:1px solid var(--line);background:var(--panel);font-size:11.5px;color:var(--sub);flex:0 0 auto}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>Chronicles of SOI</h1>
+    <span class="sub">无知编年 · 时空结构</span>
+    <span class="spacer"></span>
+    <div class="legend">
+      <span><i style="background:#c0392b"></i>政治</span>
+      <span><i style="background:#d35400"></i>军事</span>
+      <span><i style="background:#8e44ad"></i>思想文化</span>
+      <span><i style="background:#1f8b6b"></i>科技经济</span>
+    </div>
+    <span class="spacer"></span>
+    <span class="pill" id="range">—</span>
+  </header>
+  <canvas id="cv"></canvas>
+  <footer>
+    <span>滚轮缩放时间</span><span>拖拽平移</span><span>双击复位</span>
+    <span class="spacer"></span>
+    <span>时期带 = 骨架　·　密度条 = 各朝事件量　·　泳道 = 领域　·　圆点 = 事件</span>
+  </footer>
+</div>
+<script>
+// ============================================================
+// 数据层：所有年份都可模糊
+//   cert: exact（确知）/ approx（约）/ vague（模糊）
+// ============================================================
+const YEARS_FULL = [-2110, 2040];   // 全览范围
+
+const LANES = [
+  { id:'politics', name:'政治',   color:'#c0392b' },
+  { id:'war',      name:'军事',   color:'#d35400' },
+  { id:'culture',  name:'思想文化', color:'#8e44ad' },
+  { id:'tech',     name:'科技经济', color:'#1f8b6b' },
+];
+
+const PERIODS = [
+  { n:'夏',    s:-2070, e:-1600, cert:'vague',  c:'#6b5a45' },
+  { n:'商',    s:-1600, e:-1046, cert:'vague',  c:'#7d6248' },
+  { n:'西周',  s:-1046, e:-771,  cert:'approx', c:'#9c7c3f' },
+  { n:'春秋',  s:-770,  e:-476,  cert:'approx', c:'#b09246' },
+  { n:'战国',  s:-475,  e:-221,  cert:'approx', c:'#8c9a3c' },
+  { n:'秦',    s:-221,  e:-206,  cert:'exact',  c:'#3f6fa8' },
+  { n:'西汉',  s:-202,  e:8,     cert:'exact',  c:'#4a8f8f' },
+  { n:'东汉',  s:25,    e:220,   cert:'exact',  c:'#4fa88a' },
+  { n:'三国',  s:220,   e:280,   cert:'exact',  c:'#c2603c' },
+  { n:'两晋',  s:266,   e:420,   cert:'approx', c:'#b08a2e' },
+  { n:'南北朝',s:420,   e:589,   cert:'approx', c:'#8a6a3a' },
+  { n:'隋',    s:581,   e:618,   cert:'exact',  c:'#c07a2a' },
+  { n:'唐',    s:618,   e:907,   cert:'exact',  c:'#b8342e' },
+  { n:'五代十国', s:907, e:979,  cert:'approx', c:'#a0554a' },
+  { n:'辽',    s:916,   e:1125,  cert:'approx', c:'#7a6aa0' },
+  { n:'北宋',  s:960,   e:1127,  cert:'exact',  c:'#4a72b0' },
+  { n:'西夏',  s:1038,  e:1227,  cert:'approx', c:'#6a7a9a' },
+  { n:'金',    s:1115,  e:1234,  cert:'approx', c:'#7a7a8a' },
+  { n:'南宋',  s:1127,  e:1279,  cert:'exact',  c:'#5a8ac0' },
+  { n:'元',    s:1271,  e:1368,  cert:'exact',  c:'#6a5aa8' },
+  { n:'明',    s:1368,  e:1644,  cert:'exact',  c:'#3f8a5a' },
+  { n:'清',    s:1636,  e:1912,  cert:'exact',  c:'#2a8a8a' },
+  { n:'民国',  s:1912,  e:1949,  cert:'exact',  c:'#5a6470' },
+  { n:'新中国',s:1949,  e:2026,  cert:'exact',  c:'#a03830' },
+];
+
+const EVENTS = [
+  { p:'夏',   y:-2070, t:'禹建夏',            lane:'politics' },
+  { p:'商',   y:-1300, t:'盘庚迁殷',          lane:'politics' },
+  { p:'商',   y:-1250, t:'甲骨文成熟',        lane:'culture' },
+  { p:'商',   y:-1200, t:'青铜器鼎盛',        lane:'tech' },
+  { p:'西周', y:-1046, t:'武王伐纣',          lane:'war' },
+  { p:'西周', y:-1043, t:'分封制确立',        lane:'politics' },
+  { p:'西周', y:-841,  t:'共和行政',          lane:'politics' },
+  { p:'春秋', y:-770,  t:'平王东迁',          lane:'politics' },
+  { p:'春秋', y:-685,  t:'齐桓公称霸',        lane:'war' },
+  { p:'春秋', y:-551,  t:'孔子诞生',          lane:'culture' },
+  { p:'春秋', y:-536,  t:'子产铸刑书',        lane:'politics' },
+  { p:'春秋', y:-500,  t:'老子《道德经》',    lane:'culture' },
+  { p:'战国', y:-403,  t:'三家分晋',          lane:'politics' },
+  { p:'战国', y:-356,  t:'商鞅变法',          lane:'politics' },
+  { p:'战国', y:-350,  t:'《孙膑兵法》',      lane:'war' },
+  { p:'战国', y:-300,  t:'都江堰建成',        lane:'tech' },
+  { p:'战国', y:-289,  t:'孟子卒',            lane:'culture' },
+  { p:'战国', y:-280,  t:'屈原《离骚》',      lane:'culture' },
+  { p:'秦',   y:-221,  t:'秦灭六国·称帝',     lane:'politics' },
+  { p:'秦',   y:-221,  t:'书同文·车同轨',     lane:'tech' },
+  { p:'秦',   y:-214,  t:'修筑长城',          lane:'war' },
+  { p:'秦',   y:-213,  t:'焚书坑儒',          lane:'culture' },
+  { p:'西汉', y:-202,  t:'刘邦称帝',          lane:'politics' },
+  { p:'西汉', y:-138,  t:'张骞通西域',        lane:'tech' },
+  { p:'西汉', y:-100,  t:'《史记》成书',      lane:'culture' },
+  { p:'西汉', y:-60,   t:'西域都护府',        lane:'politics' },
+  { p:'东汉', y:105,   t:'蔡伦改进造纸',      lane:'tech' },
+  { p:'东汉', y:132,   t:'张衡地动仪',        lane:'tech' },
+  { p:'东汉', y:184,   t:'黄巾起义',          lane:'war' },
+  { p:'三国', y:208,   t:'赤壁之战',          lane:'war' },
+  { p:'三国', y:220,   t:'曹丕称帝',          lane:'politics' },
+  { p:'三国', y:250,   t:'九品中正制',        lane:'politics' },
+  { p:'两晋', y:370,   t:'道教兴盛',          lane:'culture' },
+  { p:'两晋', y:402,   t:'陶渊明归隐',        lane:'culture' },
+  { p:'南北朝', y:500, t:'祖冲之圆周率',      lane:'tech' },
+  { p:'南北朝', y:527, t:'《昭明文选》',      lane:'culture' },
+  { p:'南北朝', y:550, t:'少林寺建立',        lane:'culture' },
+  { p:'隋',   y:589,   t:'隋灭陈统一',        lane:'politics' },
+  { p:'隋',   y:605,   t:'开凿大运河',        lane:'tech' },
+  { p:'隋',   y:606,   t:'科举制确立',        lane:'politics' },
+  { p:'唐',   y:626,   t:'玄武门之变',        lane:'politics' },
+  { p:'唐',   y:630,   t:'贞观之治',          lane:'politics' },
+  { p:'唐',   y:755,   t:'安史之乱',          lane:'war' },
+  { p:'唐',   y:780,   t:'两税法',            lane:'tech' },
+  { p:'唐',   y:868,   t:'雕版印刷《金刚经》',lane:'tech' },
+  { p:'五代十国', y:907, t:'唐亡·五代始',     lane:'politics' },
+  { p:'北宋', y:960,   t:'陈桥兵变',          lane:'politics' },
+  { p:'北宋', y:1040,  t:'活字印刷术',        lane:'tech' },
+  { p:'北宋', y:1069,  t:'王安石变法',        lane:'politics' },
+  { p:'北宋', y:1085,  t:'《资治通鉴》成书',  lane:'culture' },
+  { p:'金',   y:1127,  t:'靖康之变',          lane:'war' },
+  { p:'南宋', y:1142,  t:'岳飞遇害',          lane:'war' },
+  { p:'南宋', y:1200,  t:'朱熹理学集大成',    lane:'culture' },
+  { p:'元',   y:1279,  t:'元灭南宋',          lane:'politics' },
+  { p:'元',   y:1280,  t:'行省制推行',        lane:'politics' },
+  { p:'元',   y:1350,  t:'元曲兴盛',          lane:'culture' },
+  { p:'明',   y:1368,  t:'明太祖立国',        lane:'politics' },
+  { p:'明',   y:1405,  t:'郑和下西洋',        lane:'tech' },
+  { p:'明',   y:1421,  t:'迁都北京',          lane:'politics' },
+  { p:'明',   y:1578,  t:'《本草纲目》',      lane:'tech' },
+  { p:'清',   y:1644,  t:'清军入关',          lane:'war' },
+  { p:'清',   y:1662,  t:'收复台湾',          lane:'war' },
+  { p:'清',   y:1840,  t:'鸦片战争',          lane:'war' },
+  { p:'清',   y:1911,  t:'辛亥革命',          lane:'politics' },
+  { p:'民国', y:1919,  t:'五四运动',          lane:'culture' },
+  { p:'民国', y:1937,  t:'全面抗战爆发',      lane:'war' },
+  { p:'民国', y:1949,  t:'新中国成立',        lane:'politics' },
+  { p:'新中国', y:1964, t:'第一颗原子弹',     lane:'tech' },
+  { p:'新中国', y:1978, t:'改革开放',         lane:'politics' },
+  { p:'新中国', y:2003, t:'首次载人航天',     lane:'tech' },
+];
+
+// ============================================================
+// 视图：★ X 与 Y 完全解耦 ★
+//   X：时间 —— 可缩放、可平移
+//   Y：泳道 —— 固定像素布局，随画布高度自适应，永不缩放
+//   这就是「结构视图」与「普通画布」的根本区别
+// ============================================================
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+let W = 0, H = 0, DPR = 1;
+
+const PX_PER_YEAR = 1;                  // 基准：1 年 1 世界像素
+let scaleX = 1;                          // 时间缩放（仅作用于 X）
+let offsetX = 0;                         // 时间平移（仅作用于 X）
+
+// Y 方向固定布局（屏幕像素）
+const BAND_Y  = 22, BAND_H = 46;        // 时期带
+const DENS_Y  = BAND_Y + BAND_H + 10;   // 密度条
+const DENS_H  = 26;
+const LANE_TOP = DENS_Y + DENS_H + 22;
+let   LANE_H  = 82;                     // 自适应
+const AXIS_H  = 46;
+
+const sxOf  = (year) => (year - 0) * PX_PER_YEAR * scaleX + offsetX;
+const xToYear = (sx) => Math.round((sx - offsetX) / (PX_PER_YEAR * scaleX));
+function fmtYear(y){ return y < 0 ? '前' + (-y) : '' + y; }
+
+function layout() {
+  const bottom = H - AXIS_H - 8;
+  LANE_H = Math.max(46, (bottom - LANE_TOP) / LANES.length);
+}
+
+function fitAll() {
+  const span = (YEARS_FULL[1] - YEARS_FULL[0]) * PX_PER_YEAR;
+  scaleX = (W - 40) / span;
+  offsetX = 20 - YEARS_FULL[0] * PX_PER_YEAR * scaleX;
+}
+
+function resize(){
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = cv.clientWidth; H = cv.clientHeight;
+  cv.width = Math.floor(W * DPR); cv.height = Math.floor(H * DPR);
+  layout();
+}
+
+let hatch = null;
+function makeHatch(){
+  const p = document.createElement('canvas'); p.width = p.height = 8;
+  const c = p.getContext('2d');
+  c.strokeStyle = 'rgba(255,255,255,0.16)'; c.lineWidth = 1.4;
+  c.beginPath(); c.moveTo(0,8); c.lineTo(8,0); c.stroke();
+  return ctx.createPattern(p,'repeat');
+}
+
+// ============================================================
+// 绘制（全部在屏幕坐标，不再有 ctx.scale 的纵向缩放）
+// ============================================================
+function draw(){
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.fillStyle = '#0b0c0f';
+  ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  if (!hatch) hatch = makeHatch();
+
+  drawBands();
+  drawDensity();
+  drawLanes();
+  drawEvents();
+  drawAxis();
+
+  const a = xToYear(0), b = xToYear(W);
+  document.getElementById('range').textContent =
+    `${fmtYear(a)} — ${fmtYear(b)}　·　时间密度 ${(scaleX*100).toFixed(1)}%`;
+}
+
+// ---- ① 时期带：骨架。这个 Demo 里最核心的一层 ----
+function drawBands(){
+  ctx.textBaseline = 'middle';
+  for (const p of PERIODS){
+    const x0 = sxOf(p.s), x1 = sxOf(p.e + 1);
+    const w = Math.max(x1 - x0, 1);
+    if (x1 < -40 || x0 > W + 40) continue;
+
+    ctx.globalAlpha = p.cert === 'vague' ? 0.40 : p.cert === 'approx' ? 0.66 : 0.90;
+    ctx.fillStyle = p.c;
+    ctx.fillRect(x0, BAND_Y, w, BAND_H);
+    ctx.globalAlpha = 1;
+
+    // 模糊边界用斜纹表示"我不确定这一段"
+    if (p.cert !== 'exact'){
+      ctx.save();
+      ctx.beginPath(); ctx.rect(x0, BAND_Y, w, BAND_H); ctx.clip();
+      ctx.fillStyle = hatch;
+      ctx.fillRect(x0, BAND_Y, w, BAND_H);
+      ctx.restore();
+    }
+
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x0+.5, BAND_Y); ctx.lineTo(x0+.5, BAND_Y+BAND_H); ctx.stroke();
+
+    if (w > 26){
+      ctx.font = '600 17px "PingFang SC","Microsoft YaHei",sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      const label = w > ctx.measureText(p.n).width + 10 ? p.n : p.n.slice(0,1);
+      ctx.fillText(label, x0 + 5, BAND_Y + BAND_H/2 + 1);
+    }
+  }
+  // 带下缘阴影
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.fillRect(0, BAND_Y+BAND_H, W, 3);
+}
+
+// ---- ② 密度条：任意缩放下都能看出"哪个朝代事件多" ----
+function drawDensity(){
+  const counts = PERIODS.map(p => EVENTS.filter(e => e.p === p.n).length);
+  const maxC = Math.max(1, ...counts);
+  ctx.fillStyle = 'rgba(255,255,255,0.03)';
+  ctx.fillRect(0, DENS_Y, W, DENS_H);
+
+  PERIODS.forEach((p, i) => {
+    const x0 = sxOf(p.s), x1 = sxOf(p.e + 1);
+    const w = Math.max(x1 - x0, 1);
+    if (x1 < 0 || x0 > W) return;
+    const h = (counts[i] / maxC) * (DENS_H - 4);
+    if (h <= 0) return;
+    // 极窄时画成一条竖线，保证缩到全览也看得见
+    const bw = Math.max(w - 1, 1.5);
+    ctx.fillStyle = p.c;
+    ctx.globalAlpha = 0.85;
+    ctx.fillRect(x0, DENS_Y + DENS_H - 2 - h, bw, h);
+    ctx.globalAlpha = 1;
+  });
+
+  ctx.font = '10px "PingFang SC","Microsoft YaHei",sans-serif';
+  ctx.fillStyle = 'rgba(139,147,167,0.75)';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('事件量', 6, DENS_Y + DENS_H/2);
+}
+
+// ---- ③ 泳道：领域。Y 固定，永不随缩放坍缩 ----
+function drawLanes(){
+  ctx.textBaseline = 'middle';
+  LANES.forEach((lane, i) => {
+    const top = LANE_TOP + i * LANE_H;
+    const cy = top + LANE_H/2;
+
+    ctx.fillStyle = i % 2 ? 'rgba(255,255,255,0.015)' : 'rgba(255,255,255,0.032)';
+    ctx.fillRect(0, top, W, LANE_H);
+
+    ctx.strokeStyle = 'rgba(50,55,68,0.8)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, top+.5); ctx.lineTo(W, top+.5); ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.055)';
+    ctx.beginPath(); ctx.moveTo(0, cy+.5); ctx.lineTo(W, cy+.5); ctx.stroke();
+
+    ctx.fillStyle = lane.color;
+    ctx.fillRect(0, cy - 10, 3, 20);
+    ctx.font = '600 12px "PingFang SC","Microsoft YaHei",sans-serif';
+    ctx.fillStyle = 'rgba(232,234,240,0.92)';
+    ctx.fillText(lane.name, 11, cy);
+  });
+  const bottom = LANE_TOP + LANES.length * LANE_H;
+  ctx.strokeStyle = 'rgba(50,55,68,0.9)';
+  ctx.beginPath(); ctx.moveTo(0, bottom+.5); ctx.lineTo(W, bottom+.5); ctx.stroke();
+}
+
+// ---- ④ 事件 ----
+function drawEvents(){
+  ctx.textBaseline = 'middle';
+  const showLabel = scaleX > 0.8;         // 时间密度足够才画文字
+  const buckets = new Map();              // 同泳道同年份的纵向错开
+
+  for (const ev of EVENTS){
+    const li = LANES.findIndex(l => l.id === ev.lane);
+    if (li < 0) continue;
+    const lane = LANES[li];
+    const cy = LANE_TOP + li * LANE_H + LANE_H/2;
+    const x = sxOf(ev.y);
+    if (x < -160 || x > W + 160) continue;
+
+    const key = li + ':' + ev.y;
+    const k = buckets.get(key) || 0;
+    buckets.set(key, k + 1);
+    const yy = cy + (k % 3 - 1) * 13;
+
+    // 从时期带垂下的引导线：体现"这个点属于哪个块"
+    if (showLabel){
+      ctx.strokeStyle = 'rgba(255,255,255,0.075)';
+      ctx.beginPath(); ctx.moveTo(x+.5, BAND_Y+BAND_H); ctx.lineTo(x+.5, yy); ctx.stroke();
+    }
+
+    ctx.beginPath(); ctx.arc(x, yy, 4.4, 0, Math.PI*2);
+    ctx.fillStyle = lane.color; ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 1; ctx.stroke();
+
+    if (showLabel){
+      ctx.font = '11.5px "PingFang SC","Microsoft YaHei",sans-serif';
+      ctx.fillStyle = 'rgba(214,219,232,0.9)';
+      ctx.fillText(ev.t, x + 8, yy - 8);
+      ctx.font = '10px "PingFang SC","Microsoft YaHei",sans-serif';
+      ctx.fillStyle = 'rgba(139,147,167,0.9)';
+      ctx.fillText(fmtYear(ev.y), x + 8, yy + 5);
+    }
+  }
+}
+
+// ---- ⑤ 时间刻度 ----
+function drawAxis(){
+  const yy = H - AXIS_H + 8;
+  ctx.strokeStyle = 'rgba(70,78,94,0.95)'; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(0, yy+.5); ctx.lineTo(W, yy+.5); ctx.stroke();
+
+  const yearsVisible = W / (PX_PER_YEAR * scaleX);
+  const rough = Math.max(yearsVisible / 12, 1);
+  const pow10 = 10 ** Math.floor(Math.log10(rough));
+  const norm = rough / pow10;
+  const step = norm < 1.5 ? pow10 : norm < 3.5 ? 2*pow10 : norm < 7.5 ? 5*pow10 : 10*pow10;
+
+  const y0 = Math.floor(xToYear(0)/step)*step;
+  const y1 = xToYear(W) + step;
+  ctx.textBaseline = 'top';
+  ctx.font = '11px "PingFang SC","Microsoft YaHei",sans-serif';
+  for (let y = y0; y <= y1; y += step){
+    const x = sxOf(y);
+    ctx.strokeStyle = 'rgba(70,78,94,0.7)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x+.5, yy); ctx.lineTo(x+.5, yy+6); ctx.stroke();
+    ctx.fillStyle = 'rgba(139,147,167,0.95)';
+    ctx.fillText(y === 0 ? '公元元年' : fmtYear(y), x + 3, yy + 8);
+  }
+}
+
+// ============================================================
+// 交互
+// ============================================================
+cv.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const r = cv.getBoundingClientRect();
+  const sxp = e.clientX - r.left;
+  const year = xToYear(sxp);
+  const k = e.deltaY > 0 ? 0.88 : 1.136;
+  scaleX = Math.min(60, Math.max(0.02, scaleX * k));
+  offsetX = sxp - year * PX_PER_YEAR * scaleX;   // 以光标处年份为锚点缩放
+  draw();
+}, { passive:true });
+
+let dragging = false, lx = 0;
+cv.addEventListener('pointerdown', e => {
+  dragging = true; lx = e.clientX;
+  cv.classList.add('dragging'); cv.setPointerCapture(e.pointerId);
+});
+cv.addEventListener('pointermove', e => {
+  if (!dragging) return;
+  offsetX += e.clientX - lx;                     // 只平移 X
+  lx = e.clientX; draw();
+});
+const stop = () => { dragging = false; cv.classList.remove('dragging'); };
+cv.addEventListener('pointerup', stop);
+cv.addEventListener('pointercancel', stop);
+cv.addEventListener('dblclick', () => { fitAll(); draw(); });
+
+const ro = new ResizeObserver(() => { resize(); draw(); });
+ro.observe(cv);
+requestAnimationFrame(() => { resize(); fitAll(); draw(); });
+</script>
+</body>
+</html>
